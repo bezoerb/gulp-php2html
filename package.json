@@ -1,0 +1,42 @@
+{
+  "name": "gulp-php2html",
+  "version": "0.0.0",
+  "description": "A plugin for Gulp",
+  "keywords": [
+    "gulpplugin"
+  ],
+  "homepage": "https://github.com/bezoerb/gulp-php2html",
+  "bugs": "https://github.com/bezoerb/gulp-php2html/issues",
+  "author": {
+    "name": "Ben Zörb",
+    "email": "",
+    "url": "https://github.com/bezoerb"
+  },
+  "main": "./index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bezoerb/gulp-php2html.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "event-stream": "*",
+    "gulp-util": "~2.2.0",
+    "gateway": "~0.1.1",
+    "request": "~2.31.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.14.0",
+    "should": "~2.1.0"
+  },
+  "engines": {
+    "node": ">=0.8.0",
+    "npm": ">=1.2.10"
+  },
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ]
+}
