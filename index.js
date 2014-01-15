@@ -12,7 +12,7 @@ module.exports = function (options) {
 
     options = options || {};
 
-    var port = options.port || 8080;
+    var port = options.port || 8888;
 
     /**
      * Use server with gateway middleware to generate html for the given source

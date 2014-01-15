@@ -17,27 +17,52 @@ Then, add it to your `gulpfile.js`:
 ```javascript
 var php2html = require("gulp-php2html");
 
-gulp.src("./src/*.ext")
-	.pipe(php2html({
-		msg: "Hello Gulp!"
-	}))
+gulp.src("./src/*.php")
+	.pipe(php2html())
 	.pipe(gulp.dest("./dist"));
 ```
+
+To make this work you need the `php-cgi` binaray in your PATH.
+
+### Installing php-cgi
+
+##### OSX
+
+The `php-cgi` binary can be installed via Homebrew by tapping the
+[homebrew-php](https://github.com/josegonzalez/homebrew-php) repository:
+
+```shell
+brew tap homebrew/dupes
+brew tap josegonzalez/homebrew-php
+brew install php54
+```
+
+##### Windows
+
+The `php-cgi` binary can be installed via [XAMPP](http://www.apachefriends.org/de/xampp-windows.html).
+Here is how you can add the binary to your PATH: [Link](https://www.monosnap.com/image/psLZ5fpwuSsvJJeZPdklEjxMr)
+
+##### Ubuntu
+
+```shell
+sudo apt-get install php5-cgi
+```
+
 
 ## API
 
 ### php2html(options)
 
-#### options.msg
-Type: `String`  
-Default: `Hello World`
+#### options.port
+Type: `Number`
+Default: `8888`
 
-The message you wish to attach to file.
+In casethe default port is not available you can chose a different port here
 
 
 ## License
 
-[MIT License](http://en.wikipedia.org/wiki/MIT_License)
+[MIT License](http://bezoerb.mit-license.org)
 
 [npm-url]: https://npmjs.org/package/gulp-php2html
 [npm-image]: https://badge.fury.io/js/gulp-php2html.png
