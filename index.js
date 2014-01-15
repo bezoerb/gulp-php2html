@@ -12,7 +12,7 @@ module.exports = function (options) {
 
     options = options || {};
 
-    var port = options.port || 8000;
+    var port = options.port || 8080;
 
     /**
      * Use server with gateway middleware to generate html for the given source
@@ -20,12 +20,8 @@ module.exports = function (options) {
      * @param {function} callback
      */
     var compilePhp = function (uri, callback) {
-        gutil.log('Calling',uri);
-        server.listen(++port);
-        request('http://localhost:' + port + uri, function (error, response, body) {
-            server.close();
-            callback(body,error);
-        }).end();
+        server.listen(port);
+        request('http://localhost:' + port + uri, callback).end();
     };
 
 
@@ -46,7 +42,7 @@ module.exports = function (options) {
             filepath = path.join(filepath,'index.php');
         }
 
-
+        // absolutize
         filepath = path.resolve(filepath);
 
 
@@ -69,20 +65,17 @@ module.exports = function (options) {
     // see "Writing a plugin"
 	// https://github.com/wearefractal/gulp/wiki/Writing-a-gulp-plugin
 	function php2html(file, callback) {
-
         var docroot = path.resolve(options.docroot || file.cwd || process.cwd()),
             uri = computeUri(docroot,file);
 
 
-        // start server
+        // create middleware
         middleware = gateway(docroot, {
             '.php': 'php-cgi'
         });
 
-        gutil.log('Starting server for',uri);
-
         // start server with php middleware
-        server = http.createServer(function (req, res) {
+        server = server || http.createServer(function (req, res) {
             // Pass the request to gateway middleware
             middleware(req, res, function (err) {
                 res.writeHead(204, err);
@@ -90,13 +83,19 @@ module.exports = function (options) {
             });
         });
 
-        compilePhp(uri, function (response, err) {
-            if (response) {
+
+
+
+        // Create HTML
+        compilePhp(uri, function (error, response, body) {
+            if (error) {
+                callback(new gutil.PluginError('gulp-php2html', error),null);
+            } if (!body) {
+                callback(new gutil.PluginError('gulp-php2html', 'empty body'),null);
+            } else {
                 file.path = gutil.replaceExtension(file.path, '.' + 'html');
-                file.contents = new Buffer(response);
+                file.contents = new Buffer(body);
                 callback(null,file);
-            } else if (err) {
-                callback(new Error(err),null);
             }
         });
 	}

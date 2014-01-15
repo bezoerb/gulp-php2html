@@ -31,6 +31,10 @@ describe("gulp-php2html", function () {
             stream = php2html(),
             valid = 0;
 
+        stream.on("error", function(err) {
+            should.not.exist(err);
+        });
+
 		stream.on("data", function (newFile) {
             should.exist(newFile);
             should.exist(newFile.path);
@@ -50,20 +54,20 @@ describe("gulp-php2html", function () {
 		stream.end();
 	});
 
-    it("should use correct PHP environment variables", function(){
+    it("should use correct PHP environment variables", function(done){
         var stream = php2html(),
             docrootfix = process.platform === 'win32' ? '\\' : '',
-            filenames = ['DOCUMENT_ROOT','PHP_SELF','REQUEST_URI','SCRIPT_NAME','SCRIPT_FILENAME'].map(function(name){
-                return 'env/' + name + '.php';
-            }),
+            file1 = getFile('env/DOCUMENT_ROOT.php'),
+            file2 = getFile('env/PHP_SELF.php'),
+            file3 = getFile('env/REQUEST_URI.php'),
+            file4 = getFile('env/SCRIPT_NAME.php'),
+            file5 = getFile('env/SCRIPT_FILENAME.php'),
+
             results = [path.resolve('test'),'/test/env/PHP_SELF.php','/test/env/REQUEST_URI.php','/test/env/SCRIPT_NAME.php',path.resolve('test/env/SCRIPT_FILENAME.php')],
-            files = filenames.map(function(name){
-                return getFile(name);
-            }),
+
             valid = 0;
 
         stream.on("data", function (newFile) {
-            gutil.log('received',newFile.path);
             should.exist(newFile);
             should.exist(newFile.path);
             should.exist(newFile.relative);
@@ -74,26 +78,38 @@ describe("gulp-php2html", function () {
         });
 
         stream.once('end',function(){
-            valid.should.equal(filenames.length);
+            valid.should.equal(5);
             done();
         });
 
-        files.forEach(function(file){
-            stream.write(file);
-        });
+
+        stream.write(file1);
+        stream.write(file2);
+        stream.write(file3);
+        stream.write(file4);
+        stream.write(file5);
+
 
         stream.end();
+    });
 
-//        'environment': function (test) {
-//            var docrootfix = process.platform === 'win32' ? '\\' : '';
-//            test.expect(5);
-//            test.equal(grunt.file.read('tmp/test/env/DOCUMENT_ROOT.html'), process.cwd()+docrootfix, 'DOCUMENT_ROOT should be cwd()');
-//            test.equal(grunt.file.read('tmp/test/env/PHP_SELF.html'), '/test/env/PHP_SELF.php', 'PHP_SELF schould be relative script path');
-//            test.equal(grunt.file.read('tmp/test/env/REQUEST_URI.html'), '/test/env/REQUEST_URI.php', 'REQUEST_URI schould be relative script path');
-//            test.equal(grunt.file.read('tmp/test/env/SCRIPT_NAME.html'), '/test/env/SCRIPT_NAME.php', 'SCRIPT_NAME schould be relative script path');
-//            test.equal(grunt.file.read('tmp/test/env/SCRIPT_FILENAME.html'), path.join(process.cwd(),'test/env/SCRIPT_FILENAME.php'), 'SCRIPT_FILENAME schould be absolute script path');
-//            test.done();
-//        }
+    it("should throw an error", function(done){
+        var srcFile = getFile('fixtures/test.txt'),
+            stream = php2html();
+
+        stream.on("error", function(err) {
+            should.exist(err);
+            done();
+        });
+
+        stream.on("data", function (newFile) {
+            should.not.exist(newFile);
+            done();
+        });
+
+
+        stream.write(srcFile);
+        stream.end();
     });
 
 });
