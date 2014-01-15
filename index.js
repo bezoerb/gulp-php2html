@@ -12,14 +12,17 @@ module.exports = function (options) {
 
     options = options || {};
 
+    var port = options.port || 8000;
+
     /**
      * Use server with gateway middleware to generate html for the given source
      * @param {string} uri
      * @param {function} callback
      */
     var compilePhp = function (uri, callback) {
-        server.listen(8888);
-        request('http://localhost:8888' + uri, function (error, response, body) {
+        gutil.log('Calling',uri);
+        server.listen(++port);
+        request('http://localhost:' + port + uri, function (error, response, body) {
             server.close();
             callback(body,error);
         }).end();
@@ -76,6 +79,8 @@ module.exports = function (options) {
             '.php': 'php-cgi'
         });
 
+        gutil.log('Starting server for',uri);
+
         // start server with php middleware
         server = http.createServer(function (req, res) {
             // Pass the request to gateway middleware
@@ -86,7 +91,6 @@ module.exports = function (options) {
         });
 
         compilePhp(uri, function (response, err) {
-            gutil.log(response,err);
             if (response) {
                 file.path = gutil.replaceExtension(file.path, '.' + 'html');
                 file.contents = new Buffer(response);
@@ -94,11 +98,7 @@ module.exports = function (options) {
             } else if (err) {
                 callback(new Error(err),null);
             }
-
         });
-
-
-       // return deferred.promise;
 	}
 
 	return es.map(php2html);
