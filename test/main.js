@@ -65,9 +65,9 @@ describe("gulp-php2html", function () {
 
             results = {
                 'DOCUMENT_ROOT': path.resolve('test'),
-                'PHP_SELF': '/test/env/PHP_SELF.php',
-                'REQUEST_URI': '/test/env/REQUEST_URI.php',
-                'SCRIPT_NAME': '/test/env/SCRIPT_NAME.php',
+                'PHP_SELF': '/env/PHP_SELF.php',
+                'REQUEST_URI': '/env/REQUEST_URI.php',
+                'SCRIPT_NAME': '/env/SCRIPT_NAME.php',
                 'SCRIPT_FILENAME': path.resolve('test/env/SCRIPT_FILENAME.php')
             },
 
@@ -82,8 +82,8 @@ describe("gulp-php2html", function () {
             should.exist(newFile.relative);
             should.exist(newFile.contents);
             path.extname(newFile.path).should.equal('.html');
-            /<\?php/.test(newFile.contents).should.equal(false);
-            newFile.contents.should.equal(results[key]);
+            /<\?php/.test(newFile.contents.toString('utf8')).should.equal(false);
+            newFile.contents.toString('utf8').should.equal(results[key]);
             ++valid;
         });
 
