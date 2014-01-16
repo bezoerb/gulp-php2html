@@ -20,7 +20,6 @@ module.exports = function (options) {
      * @param {function} callback
      */
     var compilePhp = function (uri, callback) {
-        server.listen(port);
         request('http://localhost:' + port + uri, callback).end();
     };
 
@@ -81,9 +80,7 @@ module.exports = function (options) {
                 res.writeHead(204, err);
                 res.end();
             });
-        });
-
-
+        }).listen(port);
 
 
         // Create HTML
