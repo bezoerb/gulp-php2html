@@ -57,7 +57,7 @@ sudo apt-get install php5-cgi
 Type: `Number`
 Default: `8888`
 
-In casethe default port is not available you can chose a different port here
+In case the default port is not available you can chose a different port here
 
 
 ## License

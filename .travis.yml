@@ -6,4 +6,3 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install php5-cgi
   - npm install -g grunt-cli
-  
