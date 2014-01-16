@@ -53,11 +53,11 @@ sudo apt-get install php5-cgi
 
 ### php2html(options)
 
-#### options.port
-Type: `Number`
-Default: `8888`
+#### options.docroot
+Type: `String`
+Default: process.cwd()
 
-In case the default port is not available you can chose a different port here
+Customize docroot for php files
 
 
 ## License

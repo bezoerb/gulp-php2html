@@ -1,27 +1,20 @@
 var es = require("event-stream"),
     path = require('path'),
     http = require('http'),
+    Q = require('q'),
     gutil = require('gulp-util'),
     request = require('request'),
     gateway = require('gateway'),
-    win32 = process.platform === 'win32',
-    server,middleware;
+    win32 = process.platform === 'win32';
 
 module.exports = function (options) {
 	"use strict";
 
     options = options || {};
 
-    var port = options.port || 8888;
+    var port = 8000,
+        host = 'localhost';
 
-    /**
-     * Use server with gateway middleware to generate html for the given source
-     * @param {string} uri
-     * @param {function} callback
-     */
-    var compilePhp = function (uri, callback) {
-        request('http://localhost:' + port + uri, callback).end();
-    };
 
 
 
@@ -61,12 +54,16 @@ module.exports = function (options) {
     };
 
 
+
+
+
     // see "Writing a plugin"
 	// https://github.com/wearefractal/gulp/wiki/Writing-a-gulp-plugin
 	function php2html(file, callback) {
-        var docroot = path.resolve(options.docroot || file.cwd || process.cwd()),
-            uri = computeUri(docroot,file);
-
+        var defered_server = Q.defer(),
+            docroot = path.resolve(options.docroot || file.cwd || process.cwd()),
+            uri = computeUri(docroot,file),
+            server,middleware;
 
         // create middleware
         middleware = gateway(docroot, {
@@ -74,27 +71,67 @@ module.exports = function (options) {
         });
 
         // start server with php middleware
-        server = server || http.createServer(function (req, res) {
+        server = (server || http.createServer(function (req, res) {
             // Pass the request to gateway middleware
             middleware(req, res, function (err) {
                 res.writeHead(204, err);
                 res.end();
             });
-        }).listen(port);
-
-
-        // Create HTML
-        compilePhp(uri, function (error, response, body) {
-            if (error) {
-                callback(new gutil.PluginError('gulp-php2html', error),null);
-            } if (!body) {
-                callback(new gutil.PluginError('gulp-php2html', 'empty body'),null);
-            } else {
-                file.path = gutil.replaceExtension(file.path, '.' + 'html');
-                file.contents = new Buffer(body);
-                callback(null,file);
-            }
+        })).listen(++port,function(){
+            defered_server.resolve();
         });
+
+        // Server is ready, start request
+        defered_server.promise.then(
+            function(){
+                var data = Q.defer();
+
+                // Use server with gateway middleware to generate html for the given source
+                request('http://' + host + ':' + port + uri, function (error, response, body) {
+                    if (error) {
+                        data.reject(new gutil.PluginError('gulp-php2html', error));
+                    } if (!body) {
+                        data.reject(new gutil.PluginError('gulp-php2html', 'empty body'),null);
+                    } else {
+                        file.path = gutil.replaceExtension(file.path, '.' + 'html');
+                        file.contents = new Buffer(body);
+                        data.resolve(file);
+                    }
+                }).end();
+
+                return data.promise;
+            }
+        // got data -> shut down server
+        ).then(
+            // success
+            function(data){
+                var shutdown = Q.defer();
+                server.close(function(){
+                    shutdown.resolve(data);
+                });
+                return shutdown.promise;
+
+            },
+            // error thrown
+            function(error){
+                var shutdown = Q.defer();
+                server.close(function(){
+                    shutdown.reject(error);
+                });
+                return shutdown.promise;
+            }
+
+        // all done, send callback
+        ).then(
+            // success
+            function(data){
+                callback(null,data);
+            },
+            // error
+            function(error){
+                callback(error,null);
+            }
+        );
 	}
 
 	return es.map(php2html);
