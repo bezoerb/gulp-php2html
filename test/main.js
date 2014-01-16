@@ -63,17 +63,27 @@ describe("gulp-php2html", function () {
             file4 = getFile('env/SCRIPT_NAME.php'),
             file5 = getFile('env/SCRIPT_FILENAME.php'),
 
-            results = [path.resolve('test'),'/test/env/PHP_SELF.php','/test/env/REQUEST_URI.php','/test/env/SCRIPT_NAME.php',path.resolve('test/env/SCRIPT_FILENAME.php')],
+            results = {
+                'DOCUMENT_ROOT': path.resolve('test'),
+                'PHP_SELF': '/test/env/PHP_SELF.php',
+                'REQUEST_URI': '/test/env/REQUEST_URI.php',
+                'SCRIPT_NAME': '/test/env/SCRIPT_NAME.php',
+                'SCRIPT_FILENAME': path.resolve('test/env/SCRIPT_FILENAME.php')
+            },
 
             valid = 0;
 
         stream.on("data", function (newFile) {
+            var ext = path.extname(newFile.path),
+                key = path.basename(newFile.path, ext);
+
             should.exist(newFile);
             should.exist(newFile.path);
             should.exist(newFile.relative);
             should.exist(newFile.contents);
             path.extname(newFile.path).should.equal('.html');
             /<\?php/.test(newFile.contents).should.equal(false);
+            newFile.contents.should.equal(results[key]);
             ++valid;
         });
 
