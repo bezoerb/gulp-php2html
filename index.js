@@ -1,4 +1,4 @@
-var es = require("event-stream"),
+var es = require('event-stream'),
     path = require('path'),
     http = require('http'),
     Q = require('q'),
@@ -8,11 +8,11 @@ var es = require("event-stream"),
     win32 = process.platform === 'win32';
 
 module.exports = function(options){
-    "use strict";
+    'use strict';
 
     options = options || {};
 
-    var port = 8000,
+    var port = options.port || 8888,
         host = '127.0.0.1',
         server,
         stream,
@@ -111,7 +111,7 @@ module.exports = function(options){
 
         // ensure we got the stream
         if (!stream) {
-            throw  new gutil.PluginError('gulp-php2html', 'lost stream!')
+            throw  new gutil.PluginError('gulp-php2html', 'lost stream!');
         }
 
         // check if we have files to compile
@@ -119,7 +119,7 @@ module.exports = function(options){
             stream.emit('error', new gutil.PluginError('gulp-php2html', 'missing files to convert'));
         }
 
-        var promise = startServer()
+        var promise = startServer();
 
         // make sequential requests
         files.forEach(function(file){

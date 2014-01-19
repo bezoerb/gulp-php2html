@@ -57,6 +57,12 @@ Default: process.cwd()
 
 Customize docroot for php files
 
+#### options.port
+Type: `Int`
+Default value: `8888`
+
+Specify a port for the php Server.
+
 
 ## License
 
