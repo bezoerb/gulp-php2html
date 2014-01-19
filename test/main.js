@@ -1,14 +1,13 @@
 /*global describe, it*/
-"use strict";
+'use strict';
 
-var fs = require("fs"),
-	es = require("event-stream"),
-	should = require("should"),
-	path = require("path"),
-    gutil = require("gulp-util"),
-    php2html = require("../");
+var fs = require('fs'),
+	should = require('should'),
+	path = require('path'),
+    gutil = require('gulp-util'),
+    php2html = require('../');
 
-require("mocha");
+require('mocha');
 
 
 var getFile = function(filePath) {
@@ -21,21 +20,21 @@ var getFile = function(filePath) {
     });
 };
 
-describe("gulp-php2html", function () {
+describe('gulp-php2html', function () {
 
 
 
-	it("should create html", function (done) {
+	it('should create html', function (done) {
 
 		var srcFile = getFile('fixtures/index.php'),
             stream = php2html(),
             valid = 0;
 
-        stream.on("error", function(err) {
+        stream.on('error', function(err) {
             should.not.exist(err);
         });
 
-		stream.on("data", function (newFile) {
+		stream.on('data', function (newFile) {
             should.exist(newFile);
             should.exist(newFile.path);
             should.exist(newFile.relative);
@@ -48,15 +47,14 @@ describe("gulp-php2html", function () {
         stream.once('end',function(){
             valid.should.equal(1);
             done();
-        })
+        });
 
 		stream.write(srcFile);
 		stream.end();
 	});
 
-    it("should use correct PHP environment variables", function(done){
+    it('should use correct PHP environment variables', function(done){
         var stream = php2html(),
-            docrootfix = process.platform === 'win32' ? '\\' : '',
             file1 = getFile('env/DOCUMENT_ROOT.php'),
             file2 = getFile('env/PHP_SELF.php'),
             file3 = getFile('env/REQUEST_URI.php'),
@@ -73,7 +71,7 @@ describe("gulp-php2html", function () {
 
             valid = 0;
 
-        stream.on("data", function (newFile) {
+        stream.on('data', function (newFile) {
             var ext = path.extname(newFile.path),
                 key = path.basename(newFile.path, ext);
 
@@ -103,16 +101,16 @@ describe("gulp-php2html", function () {
         stream.end();
     });
 
-    it("should throw an error", function(done){
+    it('should throw an error', function(done){
         var srcFile = getFile('fixtures/test.txt'),
             stream = php2html();
 
-        stream.on("error", function(err) {
+        stream.on('error', function(err) {
             should.exist(err);
             done();
         });
 
-        stream.on("data", function (newFile) {
+        stream.on('data', function (newFile) {
             should.not.exist(newFile);
             done();
         });
