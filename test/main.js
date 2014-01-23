@@ -27,7 +27,9 @@ describe('gulp-php2html', function () {
 	it('should create html', function (done) {
 
 		var srcFile = getFile('fixtures/index.php'),
-            stream = php2html(),
+            stream = php2html({
+                processLinks: false
+            }),
             valid = 0;
 
         stream.on('error', function(err) {
@@ -52,6 +54,8 @@ describe('gulp-php2html', function () {
 		stream.write(srcFile);
 		stream.end();
 	});
+
+//
 
     it('should use correct PHP environment variables', function(done){
         var stream = php2html(),
@@ -115,6 +119,98 @@ describe('gulp-php2html', function () {
             done();
         });
 
+
+        stream.write(srcFile);
+        stream.end();
+    });
+
+    it('should process relative links to php files and change them to html', function (done) {
+
+        var srcFile = getFile('fixtures/index.php'),
+            stream = php2html(),
+            valid = 0,
+            expectedLinks = [
+                '<a href="info.html">info.php</a>',
+                '<a href="http://info.php">http://info.php</a>',
+                '<a href="info.html?test=1">info.php</a>',
+                '<img src="getmyimg.php?test=2"/>',
+                'info.html',
+                'http://info.php',
+                'info.html?test=1',
+                'getmyimg.php?test=2'
+            ];
+
+
+
+        stream.on('error', function(err) {
+            should.not.exist(err);
+        });
+
+
+        stream.on('data', function (newFile) {
+            should.exist(newFile);
+            should.exist(newFile.path);
+            should.exist(newFile.relative);
+            should.exist(newFile.contents);
+            path.extname(newFile.path).should.equal('.html');
+            var content  = newFile.contents.toString();
+            expectedLinks.forEach(function(link){
+                content.indexOf(link).should.not.equal(-1);
+            });
+            ++valid;
+        });
+
+        stream.once('end',function(){
+            valid.should.equal(1);
+            done();
+        });
+
+        stream.write(srcFile);
+        stream.end();
+    });
+
+    it('should not process relative links to php files and change them to html', function (done) {
+
+        var srcFile = getFile('fixtures/index.php'),
+            stream = php2html({
+                processLinks: false
+            }),
+            valid = 0,
+            expectedLinks = [
+                '<a href="info.php">info.php</a>',
+                '<a href="http://info.php">http://info.php</a>',
+                '<a href="info.php?test=1">info.php</a>',
+                '<img src="getmyimg.php?test=2"/>',
+                'info.php',
+                'http://info.php',
+                'info.php?test=1',
+                'getmyimg.php?test=2'
+            ];
+
+
+
+        stream.on('error', function(err) {
+            should.not.exist(err);
+        });
+
+
+        stream.on('data', function (newFile) {
+            should.exist(newFile);
+            should.exist(newFile.path);
+            should.exist(newFile.relative);
+            should.exist(newFile.contents);
+            path.extname(newFile.path).should.equal('.html');
+            var content  = newFile.contents.toString();
+            expectedLinks.forEach(function(link){
+                content.indexOf(link).should.not.equal(-1);
+            });
+            ++valid;
+        });
+
+        stream.once('end',function(){
+            valid.should.equal(1);
+            done();
+        });
 
         stream.write(srcFile);
         stream.end();

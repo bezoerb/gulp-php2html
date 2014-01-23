@@ -2,6 +2,7 @@ var es = require('event-stream'),
     path = require('path'),
     http = require('http'),
     Q = require('q'),
+    _ = require('lodash'),
     gutil = require('gulp-util'),
     request = require('request'),
     gateway = require('gateway'),
@@ -10,9 +11,12 @@ var es = require('event-stream'),
 module.exports = function(options){
     'use strict';
 
-    options = options || {};
+    options = _.assign({
+        port: 8888,
+        processLinks: true
+    },options || {});
 
-    var port = options.port || 8888,
+    var port = options.port,
         host = '127.0.0.1',
         server,
         stream,
@@ -142,6 +146,20 @@ module.exports = function(options){
 
                     // everything went right
                     } else {
+
+                        // replace relative php links with corresponding html link
+                        if (body && options.processLinks) {
+
+                            _.forEach(body.match(/href=['"]([^'"]+\.php(?:\?[^'"]*)?)['"]/gm),function(link){
+                                if (link.match(/:\/\//)) {
+                                    return;
+                                }
+                                var hlink = link.replace(/(\w)\.php([^\w])/g,'$1.html$2');
+
+                                body = body.replace(link,hlink);
+                            });
+                        }
+
                         file.path = gutil.replaceExtension(file.path, '.' + 'html');
                         file.contents = new Buffer(body);
                         stream.emit('data', file);

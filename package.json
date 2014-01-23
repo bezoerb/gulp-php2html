@@ -25,7 +25,8 @@
     "gulp-util": "~2.2.0",
     "gateway": "~0.1.1",
     "request": "~2.31.0",
-    "q": "~1.0.0"
+    "q": "~1.0.0",
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "mocha": "~1.14.0",

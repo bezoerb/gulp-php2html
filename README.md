@@ -63,6 +63,12 @@ Default value: `8888`
 
 Specify a port for the php Server.
 
+#### options.processLinks
+Type: `Boolean`
+Default value: `true`
+
+Convert links pointing to `.php` pages to the `.html` equivalent.
+
 
 ## License
 
