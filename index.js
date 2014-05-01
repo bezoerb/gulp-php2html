@@ -137,7 +137,7 @@ module.exports = function(options){
                     url = 'http://' + host + ':' + port + uri;
 
                 // $_GET data
-                if (typeof options.getData !== 'undefined') {
+                if (typeof options.getData !== 'undefined' && _.size(options.getData)) {
                     url += '?' + qs.stringify(options.getData);
                 }
 
