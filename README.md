@@ -69,6 +69,12 @@ Default value: `true`
 
 Convert links pointing to `.php` pages to the `.html` equivalent.
 
+#### options.getData
+Type: `Object`
+Default value: `{}`
+
+Pass data to php file using $_GET.
+
 
 ## License
 

@@ -4,6 +4,7 @@ var es = require('event-stream'),
     Q = require('q'),
     _ = require('lodash'),
     gutil = require('gulp-util'),
+    qs = require('qs'),
     request = require('request'),
     gateway = require('gateway'),
     win32 = process.platform === 'win32';
@@ -13,7 +14,8 @@ module.exports = function(options){
 
     options = _.assign({
         port: 8888,
-        processLinks: true
+        processLinks: true,
+        getData: {}
     },options || {});
 
     var port = options.port,
@@ -125,15 +127,24 @@ module.exports = function(options){
 
         var promise = startServer();
 
+
+
         // make sequential requests
         files.forEach(function(file){
             promise = promise.then(function(docroot){
                 var deferred = Q.defer(),
-                    uri = computeUri(docroot, file);
+                    uri = computeUri(docroot, file),
+                    url = 'http://' + host + ':' + port + uri;
+
+                // $_GET data
+                if (typeof options.getData !== 'undefined') {
+                    url += '?' + qs.stringify(options.getData);
+                }
+
 
                 gutil.log('Processing ' + gutil.colors.green(file.path));
 
-                request('http://' + host + ':' + port + uri,function(error, response, body){
+                request(url,function(error, response, body){
 
                     // request failed
                     if (error) {

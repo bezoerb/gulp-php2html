@@ -216,4 +216,39 @@ describe('gulp-php2html', function () {
         stream.end();
     });
 
+    it('should output $_GET data passed to php2html', function(done) {
+        var stream = php2html({
+                getData: {test: 42, arr: [1,2,3,4], obj: {a:1,b:2,c:3}}
+            }),
+            fixture = getFile('fixtures/get.php'),
+            expected = getFile('expected/get.html').contents.toString('utf8').replace(/[\s\t\r\n]+/gm,''),
+
+            valid = 0;
+
+        stream.on('data', function (newFile) {
+            var ext = path.extname(newFile.path);
+
+            should.exist(newFile);
+            should.exist(newFile.path);
+            should.exist(newFile.relative);
+            should.exist(newFile.contents);
+            path.extname(newFile.path).should.equal('.html');
+            /<\?php/.test(newFile.contents.toString('utf8')).should.equal(false);
+
+            newFile.contents.toString('utf8').replace(/[\s\t\r\n]+/gm,'').should.equal(expected);
+            ++valid;
+        });
+
+        stream.once('end',function(){
+            valid.should.equal(1);
+            done();
+        });
+
+
+        stream.write(fixture);
+
+
+        stream.end();
+    });
+
 });
