@@ -15,7 +15,8 @@ module.exports = function(options){
     options = _.assign({
         port: 8888,
         processLinks: true,
-        getData: {}
+        getData: {},
+        verbose: false
     },options || {});
 
     var port = options.port,
@@ -28,11 +29,11 @@ module.exports = function(options){
      * Queue file send over stream
      * @param file
      */
-    function queue(file){
-        if (file) {
-            files.push(file);
+    function queue(file) {
+        if (file.isNull()) {
+            stream.emit('data', file);
         } else {
-            stream.emit('error', new gutil.PluginError('gulp-php2html', 'got undefined file'));
+            files.push(file);
         }
     }
 
@@ -45,7 +46,7 @@ module.exports = function(options){
     function computeDocroot(){
         var dir =  options.docroot || files.reduce(function(prev, cur){
                 return prev.cwd === cur.cwd ? cur : {cwd: undefined};
-            }).cwd || process.cwd;
+            }).cwd || process.cwd();
 
         return path.resolve(dir);
     }
@@ -122,7 +123,8 @@ module.exports = function(options){
 
         // check if we have files to compile
         if (!files.length) {
-            stream.emit('error', new gutil.PluginError('gulp-php2html', 'missing files to convert'));
+            stream.emit('end');
+            return;
         }
 
         var promise = startServer();
@@ -141,8 +143,9 @@ module.exports = function(options){
                     url += '?' + qs.stringify(options.getData);
                 }
 
-
-                gutil.log('Processing ' + gutil.colors.green(file.path));
+                if (options.verbose) {
+                    gutil.log('Processing ' + gutil.colors.green(file.path));
+                }
 
                 request(url,function(error, response, body){
 

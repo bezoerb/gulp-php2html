@@ -75,6 +75,12 @@ Default value: `{}`
 
 Pass data to php file using $_GET.
 
+#### options.verbose
+Type: `Boolean`
+Default value: `false`
+
+Print debug output to the console
+
 
 ## License
 

@@ -226,8 +226,6 @@ describe('gulp-php2html', function () {
             valid = 0;
 
         stream.on('data', function (newFile) {
-            var ext = path.extname(newFile.path);
-
             should.exist(newFile);
             should.exist(newFile.path);
             should.exist(newFile.relative);
@@ -247,6 +245,19 @@ describe('gulp-php2html', function () {
 
         stream.write(fixture);
 
+
+        stream.end();
+    });
+
+
+    it('should not throw an error', function(done){
+        var stream = php2html();
+
+        stream.on('error', function() {
+            should.fail('Should not throw an error');
+        });
+
+        stream.once('end', done);
 
         stream.end();
     });
