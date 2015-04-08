@@ -51,36 +51,13 @@ sudo apt-get install php5-cgi
 
 ### php2html(options)
 
-#### options.docroot
-Type: `String`
-Default: process.cwd()
-
-Customize docroot for php files
-
-#### options.port
-Type: `Int`
-Default value: `8888`
-
-Specify a port for the php Server.
-
-#### options.processLinks
-Type: `Boolean`
-Default value: `true`
-
-Convert links pointing to `.php` pages to the `.html` equivalent.
-
-#### options.getData
-Type: `Object`
-Default value: `{}`
-
-Pass data to php file using $_GET.
-
 #### options.verbose
 Type: `Boolean`
 Default value: `false`
 
 Print debug output to the console
 
+See [php2html](https://github.com/bezoerb/php2html) for a full list of options.
 
 ## License
 

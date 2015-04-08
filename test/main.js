@@ -21,7 +21,7 @@ var getFile = function(filePath) {
 };
 
 describe('gulp-php2html', function () {
-
+	this.timeout(20000);
 
 
 	it('should create html', function (done) {
@@ -115,6 +115,7 @@ describe('gulp-php2html', function () {
         });
 
         stream.on('data', function (newFile) {
+			console.log(newFile.contents.toString('utf-8'));
             should.not.exist(newFile);
             done();
         });
