@@ -9,7 +9,6 @@ module.exports = function(options){
     'use strict';
 
     options = _.assign({
-        port: 8888,
         processLinks: true,
         getData: {},
         verbose: false
