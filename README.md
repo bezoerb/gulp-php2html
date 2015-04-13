@@ -64,10 +64,10 @@ See [php2html](https://github.com/bezoerb/php2html) for a full list of options.
 [MIT License](http://bezoerb.mit-license.org)
 
 [npm-url]: https://npmjs.org/package/gulp-php2html
-[npm-image]: https://badge.fury.io/js/gulp-php2html.png
+[npm-image]: https://badge.fury.io/js/gulp-php2html.svg
 
 [travis-url]: http://travis-ci.org/bezoerb/gulp-php2html
-[travis-image]: https://secure.travis-ci.org/bezoerb/gulp-php2html.png?branch=master
+[travis-image]: https://secure.travis-ci.org/bezoerb/gulp-php2html.svg?branch=master
 
 [depstat-url]: https://david-dm.org/bezoerb/gulp-php2html
-[depstat-image]: https://david-dm.org/bezoerb/gulp-php2html.png
+[depstat-image]: https://david-dm.org/bezoerb/gulp-php2html.svg
