@@ -27,12 +27,13 @@ To make this work you need the `php-cgi` binaray in your PATH.
 ##### OSX
 
 The `php-cgi` binary can be installed via Homebrew by tapping the
-[homebrew-php](https://github.com/josegonzalez/homebrew-php) repository:
+[homebrew-php](https://github.com/Homebrew/homebrew-php) repository:
 
 ```shell
 brew tap homebrew/dupes
-brew tap josegonzalez/homebrew-php
-brew install php54
+brew tap homebrew/versions
+brew tap homebrew/homebrew-php
+brew install php56
 ```
 
 ##### Windows
