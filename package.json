@@ -25,7 +25,9 @@
     "event-stream": "*",
     "gulp-util": "^3.0.4",
     "lodash": "^3.6.0",
-    "php2html": "~0.0.6"
+    "php2html": "~0.0.6",
+    "stream-array": "^1.0.1",
+    "vinyl": "^0.4.6"
   },
   "devDependencies": {
     "mocha": "^2.2.4",

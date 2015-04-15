@@ -1,12 +1,14 @@
+'use strict';
 var es = require('event-stream');
 var _ = require('lodash');
 var async = require('async');
 var php2html = require('php2html');
 var gutil = require('gulp-util');
 var path = require('path');
+var File = require('vinyl');
+var streamify = require('stream-array');
 
-module.exports = function(options){
-    'use strict';
+var php2htmlPlugin = function(options){
 
     options = _.assign({
         processLinks: true,
@@ -18,15 +20,19 @@ module.exports = function(options){
         files = [];
 
     /**
-     * Queue file send over stream
+     * Queue file or route send over stream
      * @param file
      */
     function queue(file) {
-        if (file.isNull()) {
-            stream.emit('data', file);
-        } else {
-            files.push(file);
-        }
+		if (options.verbose) {
+			gutil.log('Queueing ' + gutil.colors.green(file.route || file.path));
+		}
+		// file may be just a route, no file
+		if (!options.router && file.isNull()) {
+			stream.emit('data', file);
+		} else {
+			files.push(file);
+		}
     }
 
 	/**
@@ -47,7 +53,6 @@ module.exports = function(options){
      * Call server on stream end
      */
     function convert(){
-
         // ensure we got the stream
         if (!stream) {
             throw  new gutil.PluginError('gulp-php2html', 'lost stream!');
@@ -62,7 +67,7 @@ module.exports = function(options){
 		options.baseDir = computeDocroot();
 
 		async.each(files, function(file, callback) {
-			if (file.isNull()) {
+			if (!options.router && file.isNull()) {
 				return callback();
 			}
 
@@ -76,7 +81,7 @@ module.exports = function(options){
 				gutil.log('Processing ' + gutil.colors.green(file.path));
 			}
 
-			php2html(file.path, options, function(error, data){
+			php2html(file.route || file.path, options, function(error, data){
 				// request failed
 				if (error) {
 					stream.emit('error', new gutil.PluginError('gulp-php2html', error));
@@ -107,3 +112,19 @@ module.exports = function(options){
 
     return stream;
 };
+
+
+php2htmlPlugin.routes = function(routes) {
+	return streamify(_.map(routes,function(route) {
+		var file = new File({
+			cwd: process.cwd(),
+			path: path.join(process.cwd(), route)
+		});
+
+		file.route = route;
+
+		return file;
+	}));
+};
+
+module.exports = php2htmlPlugin;
