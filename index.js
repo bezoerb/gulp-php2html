@@ -8,22 +8,22 @@ var path = require('path');
 var File = require('vinyl');
 var streamify = require('stream-array');
 
-var php2htmlPlugin = function(options){
+var php2htmlPlugin = function (options) {
 
-    options = _.assign({
-        processLinks: true,
-        getData: {},
-        verbose: false
-    },options || {});
+	options = _.assign({
+		processLinks: true,
+		getData: {},
+		verbose: false
+	}, options || {});
 
-    var stream,
-        files = [];
+	var stream,
+		files = [];
 
-    /**
-     * Queue file or route send over stream
-     * @param file
-     */
-    function queue(file) {
+	/**
+	 * Queue file or route send over stream
+	 * @param file
+	 */
+	function queue(file) {
 		if (options.verbose) {
 			gutil.log('Queueing ' + gutil.colors.green(file.route || file.path));
 		}
@@ -33,7 +33,7 @@ var php2htmlPlugin = function(options){
 		} else {
 			files.push(file);
 		}
-    }
+	}
 
 	/**
 	 * get Docroot from
@@ -41,32 +41,32 @@ var php2htmlPlugin = function(options){
 	 *  b) filelist or
 	 *  c) process.cwd
 	 */
-	function computeDocroot(){
-		var dir =  options.baseDir || options.docroot || files.reduce(function(prev, cur){
+	function computeDocroot() {
+		var dir = options.baseDir || options.docroot || files.reduce(function (prev, cur) {
 				return prev.cwd === cur.cwd ? cur : {cwd: undefined};
 			}).cwd || process.cwd();
 
 		return path.resolve(dir);
 	}
 
-    /**
-     * Call server on stream end
-     */
-    function convert(){
-        // ensure we got the stream
-        if (!stream) {
-            throw  new gutil.PluginError('gulp-php2html', 'lost stream!');
-        }
+	/**
+	 * Call server on stream end
+	 */
+	function convert() {
+		// ensure we got the stream
+		if (!stream) {
+			throw  new gutil.PluginError('gulp-php2html', 'lost stream!');
+		}
 
-        // check if we have files to compile
-        if (!files.length) {
-            stream.emit('end');
-            return;
-        }
+		// check if we have files to compile
+		if (!files.length) {
+			stream.emit('end');
+			return;
+		}
 
 		options.baseDir = computeDocroot();
 
-		async.each(files, function(file, callback) {
+		async.each(files, function (file, callback) {
 			if (!options.router && file.isNull()) {
 				return callback();
 			}
@@ -81,7 +81,7 @@ var php2htmlPlugin = function(options){
 				gutil.log('Processing ' + gutil.colors.green(file.path));
 			}
 
-			php2html(file.route || file.path, options, function(error, data){
+			php2html(file.route || file.path, options, function (error, data) {
 				// request failed
 				if (error) {
 					stream.emit('error', new gutil.PluginError('gulp-php2html', error));
@@ -93,7 +93,7 @@ var php2htmlPlugin = function(options){
 					stream.emit('error', new gutil.PluginError('gulp-php2html', '204 - No Content'));
 					callback('204 - No Content');
 
-				// everything went right
+					// everything went right
 				} else {
 
 					file.path = gutil.replaceExtension(file.path, '.' + 'html');
@@ -103,28 +103,36 @@ var php2htmlPlugin = function(options){
 				}
 
 			});
-		}, function() {
+		}, function () {
 			stream.emit('end');
 		});
-    }
+	}
 
-    stream = es.through(queue, convert);
+	stream = es.through(queue, convert);
 
-    return stream;
+	return stream;
 };
 
 
-php2htmlPlugin.routes = function(routes) {
-	return streamify(_.map(routes,function(route) {
-		var file = new File({
-			cwd: process.cwd(),
-			path: path.join(process.cwd(), route)
-		});
+php2htmlPlugin.routes = function (routes) {
+	var vinyls = _.chain(routes)
+		.reject(function (route) {
+			return !_.isString(route) || !route;
+		}).map(function (route) {
+			var isDir = /\/$/.test(route);
+			var uri = isDir ? route + 'index.php' : route;
+			var file = new File({
+				cwd: process.cwd(),
+				path: path.join(process.cwd(), uri)
+			});
 
-		file.route = route;
+			file.route = route;
 
-		return file;
-	}));
+			return file;
+		}).value();
+
+	return streamify(vinyls);
+
 };
 
 module.exports = php2htmlPlugin;

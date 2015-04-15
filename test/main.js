@@ -320,6 +320,75 @@ describe('gulp-php2html', function () {
 
 			routes.pipe(stream);
 		});
+
+		it('should skip empty routes routes', function (done) {
+
+			var routes = php2html.routes(['','','/valid']);
+			var	stream = php2html({
+				router: 'test/fixtures/router.php',
+				processLinks: false
+			});
+			var valid = 0;
+
+			stream.on('error', function (err) {
+				should.not.exist(err);
+			});
+
+			stream.on('data', function (newFile) {
+				should.exist(newFile);
+				should.exist(newFile.route);
+				should.exist(newFile.path);
+				should.exist(newFile.contents);
+				path.extname(newFile.path).should.equal('.html');
+				/<\?php/.test(newFile.contents).should.equal(false);
+				newFile.contents.toString('utf-8').should.equal(newFile.route);
+				++valid;
+			});
+
+			stream.once('end', function () {
+				valid.should.equal(1);
+				done();
+			});
+
+
+			routes.pipe(stream);
+		});
+
+		it('should set filenames to index for routes ending with /', function (done) {
+
+			var routes = php2html.routes(['/']);
+			var	stream = php2html({
+				router: 'test/fixtures/router.php',
+				processLinks: false
+			});
+			var valid = 0;
+
+			stream.on('error', function (err) {
+				should.not.exist(err);
+			});
+
+			stream.on('data', function (newFile) {
+				should.exist(newFile);
+				should.exist(newFile.route);
+				should.exist(newFile.path);
+				should.exist(newFile.contents);
+				path.extname(newFile.path).should.equal('.html');
+
+				/<\?php/.test(newFile.contents).should.equal(false);
+				newFile.contents.toString('utf-8').should.equal(newFile.route);
+
+				/index\.html$/.test(newFile.path).should.equal(true);
+				++valid;
+			});
+
+			stream.once('end', function () {
+				valid.should.equal(1);
+				done();
+			});
+
+
+			routes.pipe(stream);
+		});
 	});
 
 });
