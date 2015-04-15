@@ -20,6 +20,16 @@ gulp.src("./src/*.php")
 	.pipe(gulp.dest("./dist"));
 ```
 
+### With router
+
+```javascript
+var php2html = require("gulp-php2html");
+
+php2html.routes(['/my/route','/will/be/processed','/by/router.php'])
+	.pipe(php2html({router: 'router.php'))
+	.pipe(gulp.dest("./dist"));
+```
+
 To make this work you need the `php-cgi` binaray in your PATH.
 
 ### Installing php-cgi
