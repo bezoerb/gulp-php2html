@@ -1,394 +1,351 @@
 /*global describe, it*/
 'use strict';
 
-var fs = require('fs'),
-	should = require('should'),
-	path = require('path'),
-    gutil = require('gulp-util'),
-	Stream = require('stream').Stream,
-    php2html = require('../');
+var fs = require('fs');
+var vinylStream = require('vinyl-source-stream');
+var assert = require('chai').assert;
+var streamAssert = require('stream-assert');
+var should = require('should');
+var path = require('path');
+var gutil = require('gulp-util');
+var Stream = require('stream').Stream;
+var php2html = require('../');
+var array = require('stream-array');
 
+/**
+ * Get vinyl file object
+ *
+ * @returns {*|StreamArray|exports}
+ */
+function getVinyl() {
+    var args = Array.prototype.slice.call(arguments);
 
+    function create(filepath) {
+        var file = path.join(__dirname, 'fixtures', filepath);
+        return new gutil.File({
+            cwd: __dirname,
+            base: path.dirname(file),
+            path: file,
+            contents: new Buffer(fs.readFileSync(file))
+        });
+    }
 
-require('mocha');
+    return array(args.map(create));
+}
 
-
-var getFile = function(filePath) {
-    filePath = 'test/'+filePath;
-    return new gutil.File({
-        path: filePath,
-        cwd: 'test/',
-        base: path.dirname(filePath),
-        contents: fs.readFileSync(filePath)
-    });
-};
+function read(file) {
+    return fs.readFileSync(path.join(__dirname,file), 'utf8');
+}
 
 describe('gulp-php2html', function () {
-	this.timeout(20000);
-
-
-
-	describe('plugin', function () {
-		it('should create html', function (done) {
-
-			var srcFile = getFile('fixtures/index.php'),
-				stream = php2html({
-					processLinks: false
-				}),
-				valid = 0;
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.path);
-				should.exist(newFile.relative);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				/<\?php/.test(newFile.contents).should.equal(false);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-			stream.write(srcFile);
-			stream.end();
-		});
-
-//
-
-		it('should use correct PHP environment variables', function (done) {
-			var stream = php2html(),
-				file1 = getFile('env/DOCUMENT_ROOT.php'),
-				file2 = getFile('env/PHP_SELF.php'),
-				file3 = getFile('env/REQUEST_URI.php'),
-				file4 = getFile('env/SCRIPT_NAME.php'),
-				file5 = getFile('env/SCRIPT_FILENAME.php'),
-
-				results = {
-					'DOCUMENT_ROOT': path.resolve('test'),
-					'PHP_SELF': '/env/PHP_SELF.php',
-					'REQUEST_URI': '/env/REQUEST_URI.php',
-					'SCRIPT_NAME': '/env/SCRIPT_NAME.php',
-					'SCRIPT_FILENAME': path.resolve('test/env/SCRIPT_FILENAME.php')
-				},
-
-				valid = 0;
-
-			stream.on('data', function (newFile) {
-				var ext = path.extname(newFile.path),
-					key = path.basename(newFile.path, ext);
-
-				should.exist(newFile);
-				should.exist(newFile.path);
-				should.exist(newFile.relative);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				/<\?php/.test(newFile.contents.toString('utf8')).should.equal(false);
-				newFile.contents.toString('utf8').should.equal(results[key]);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(5);
-				done();
-			});
-
-
-			stream.write(file1);
-			stream.write(file2);
-			stream.write(file3);
-			stream.write(file4);
-			stream.write(file5);
-
-
-			stream.end();
-		});
-
-		it('should throw an error', function (done) {
-			var srcFile = getFile('fixtures/test.txt'),
-				stream = php2html();
-
-			stream.on('error', function (err) {
-				should.exist(err);
-				done();
-			});
-
-			stream.on('data', function (newFile) {
-				console.log(newFile.contents.toString('utf-8'));
-				should.not.exist(newFile);
-				done();
-			});
-
-
-			stream.write(srcFile);
-			stream.end();
-		});
-
-		it('should process relative links to php files and change them to html', function (done) {
-
-			var srcFile = getFile('fixtures/index.php'),
-				stream = php2html(),
-				valid = 0,
-				expectedLinks = [
-					'<a href="info.html">info.php</a>',
-					'<a href="http://info.php">http://info.php</a>',
-					'<a href="info.html?test=1">info.php</a>',
-					'<img src="getmyimg.php?test=2"/>',
-					'info.html',
-					'http://info.php',
-					'info.html?test=1',
-					'getmyimg.php?test=2'
-				];
-
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.path);
-				should.exist(newFile.relative);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				var content = newFile.contents.toString();
-				expectedLinks.forEach(function (link) {
-					content.indexOf(link).should.not.equal(-1);
-				});
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-			stream.write(srcFile);
-			stream.end();
-		});
-
-		it('should not process relative links to php files and change them to html', function (done) {
-
-			var srcFile = getFile('fixtures/index.php'),
-				stream = php2html({
-					processLinks: false
-				}),
-				valid = 0,
-				expectedLinks = [
-					'<a href="info.php">info.php</a>',
-					'<a href="http://info.php">http://info.php</a>',
-					'<a href="info.php?test=1">info.php</a>',
-					'<img src="getmyimg.php?test=2"/>',
-					'info.php',
-					'http://info.php',
-					'info.php?test=1',
-					'getmyimg.php?test=2'
-				];
-
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.path);
-				should.exist(newFile.relative);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				var content = newFile.contents.toString();
-				expectedLinks.forEach(function (link) {
-					content.indexOf(link).should.not.equal(-1);
-				});
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-			stream.write(srcFile);
-			stream.end();
-		});
-
-		it('should output $_GET data passed to php2html', function (done) {
-			var stream = php2html({
-					getData: {test: 42, arr: [1, 2, 3, 4], obj: {a: 1, b: 2, c: 3}}
-				}),
-				fixture = getFile('fixtures/get.php'),
-				expected = getFile('expected/get.html').contents.toString('utf8').replace(/[\s\t\r\n]+/gm, ''),
-
-				valid = 0;
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.path);
-				should.exist(newFile.relative);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				/<\?php/.test(newFile.contents.toString('utf8')).should.equal(false);
-
-				newFile.contents.toString('utf8').replace(/[\s\t\r\n]+/gm, '').should.equal(expected);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-
-			stream.write(fixture);
-
-
-			stream.end();
-		});
-
-
-		it('should not throw an error', function (done) {
-			var stream = php2html();
-
-			stream.on('error', function () {
-				should.fail('Should not throw an error');
-			});
-
-			stream.once('end', done);
-
-			stream.end();
-		});
-
-
-	});
-
-
-	describe('router', function () {
-		it('should be available', function() {
-			var type = typeof php2html.routes;
-			type.should.equal('function');
-		});
-
-
-		it('should return readable stream', function() {
-			var routes = php2html.routes(['test']);
-			var isStream = routes instanceof Stream;
-			var isReadable = typeof routes._read === 'function' && typeof routes._readableState === 'object';
-
-			isStream.should.equal(true);
-			isReadable.should.equal(true);
-			routes.readable.should.equal(true);
-		});
-
-
-		it('should create html from routes', function (done) {
-
-			var routes = php2html.routes(['/myroute','/another/route','/route/with/extension.php']);
-			var	stream = php2html({
-					router: 'test/fixtures/router.php',
-					processLinks: false
-				});
-			var valid = 0;
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.route);
-				should.exist(newFile.path);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				/<\?php/.test(newFile.contents).should.equal(false);
-				newFile.contents.toString('utf-8').should.equal(newFile.route);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(3);
-				done();
-			});
-
-
-			routes.pipe(stream);
-		});
-
-		it('should skip empty routes routes', function (done) {
-
-			var routes = php2html.routes(['','','/valid']);
-			var	stream = php2html({
-				router: 'test/fixtures/router.php',
-				processLinks: false
-			});
-			var valid = 0;
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.route);
-				should.exist(newFile.path);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-				/<\?php/.test(newFile.contents).should.equal(false);
-				newFile.contents.toString('utf-8').should.equal(newFile.route);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-
-			routes.pipe(stream);
-		});
-
-		it('should set filenames to index for routes ending with /', function (done) {
-
-			var routes = php2html.routes(['/']);
-			var	stream = php2html({
-				router: 'test/fixtures/router.php',
-				processLinks: false
-			});
-			var valid = 0;
-
-			stream.on('error', function (err) {
-				should.not.exist(err);
-			});
-
-			stream.on('data', function (newFile) {
-				should.exist(newFile);
-				should.exist(newFile.route);
-				should.exist(newFile.path);
-				should.exist(newFile.contents);
-				path.extname(newFile.path).should.equal('.html');
-
-				/<\?php/.test(newFile.contents).should.equal(false);
-				newFile.contents.toString('utf-8').should.equal(newFile.route);
-
-				/index\.html$/.test(newFile.path).should.equal(true);
-				++valid;
-			});
-
-			stream.once('end', function () {
-				valid.should.equal(1);
-				done();
-			});
-
-
-			routes.pipe(stream);
-		});
-	});
+    describe('plugin', function () {
+       // this.timeout(20000);
+
+        it('should emit error on streamed file', function (done) {
+            var fakeFilePath = path.join(__dirname, 'fixtures', 'index.php');
+
+            fs.createReadStream(fakeFilePath)
+                .pipe(vinylStream())
+                .pipe(php2html())
+                .on('data', function (data) {
+                    assert.fail(null, data, 'Should not emit data');
+                })
+                .on('error', function (err) {
+                    assert.strictEqual(err.message, 'Streaming not supported');
+                    done();
+                });
+        });
+
+        it('should create html', function (done) {
+            getVinyl('index.php')
+                .pipe(php2html())
+                .pipe(streamAssert.length(1))
+                .on('data', function (newFile) {
+                    should.exist(newFile);
+                    should.exist(newFile.path);
+                    should.exist(newFile.relative);
+                    should.exist(newFile.contents);
+                    path.extname(newFile.path).should.equal('.html');
+                    /<\?php/.test(newFile.contents).should.equal(false);
+                })
+                .on('error', function (err) {
+                    assert.fail(null, err, 'Should not emit an error');
+                    done();
+                })
+                .on('end', done);
+        });
+
+
+
+        it('should use correct PHP environment variables', function (done) {
+            var results = {
+                'DOCUMENT_ROOT': path.resolve('test'),
+                'PHP_SELF': '/fixtures/env/PHP_SELF.php',
+                'REQUEST_URI': '/fixtures/env/REQUEST_URI.php',
+                'SCRIPT_NAME': '/fixtures/env/SCRIPT_NAME.php',
+                'SCRIPT_FILENAME': path.resolve('test/fixtures/env/SCRIPT_FILENAME.php')
+            };
+
+            function assertResult(file) {
+                var index = path.basename(file.path,'.html');
+                should.exist(file);
+                should.exist(file.path);
+                should.exist(file.relative);
+                should.exist(file.contents);
+                /<\?php/.test(file.contents.toString('utf8')).should.equal(false);
+                file.contents.toString('utf8').should.equal(results[index]);
+            }
+
+
+            getVinyl('env/DOCUMENT_ROOT.php','env/PHP_SELF.php','env/REQUEST_URI.php','env/SCRIPT_NAME.php','env/SCRIPT_FILENAME.php')
+                .pipe(php2html())
+                .pipe(streamAssert.length(5))
+                .pipe(streamAssert.nth(0, assertResult))
+                .pipe(streamAssert.nth(1, assertResult))
+                .pipe(streamAssert.nth(2, assertResult))
+                .pipe(streamAssert.nth(3, assertResult))
+                .pipe(streamAssert.nth(4, assertResult))
+                .on('error', function (err) {
+                    assert.fail(null, err, 'Should not emit an error');
+                    done();
+                })
+                .on('data', function(file){
+                    path.extname(file.path).should.equal('.html');
+                })
+                .on('end', done);
+        });
+
+        it('should throw an error', function (done) {
+            getVinyl('test.txt')
+                .pipe(php2html())
+                .on('data', function (newFile) {
+                    should.not.exist(newFile);
+                    done();
+                })
+                .on('error', function (err) {
+                    should.exist(err);
+                    done();
+                });
+        });
+
+        it('should respect haltOnError option', function (done) {
+            getVinyl('test.txt','index.php')
+                .pipe(php2html({haltOnError: false}))
+                .on('data', function (newFile) {
+                    should.exist(newFile);
+                })
+                .on('error', function (err) {
+                    should.not.exist(err);
+                })
+                .on('end', done);
+        });
+
+        it('should process relative links to php files and change them to html', function (done) {
+            getVinyl('index.php')
+                .pipe(php2html())
+                .on('data', function (newFile) {
+                    should.exist(newFile);
+                    should.exist(newFile.path);
+                    should.exist(newFile.relative);
+                    should.exist(newFile.contents);
+                    path.extname(newFile.path).should.equal('.html');
+                    var content = newFile.contents.toString();
+                    [
+                        '<a href="info.html">info.php</a>',
+                        '<a href="http://info.php">http://info.php</a>',
+                        '<a href="info.html?test=1">info.php</a>',
+                        '<img src="getmyimg.php?test=2"/>',
+                        'info.html',
+                        'http://info.php',
+                        'info.html?test=1',
+                        'getmyimg.php?test=2'
+                    ].forEach(function (link) {
+                        content.indexOf(link).should.not.equal(-1);
+                    });
+                })
+                .on('error', function (err) {
+                    assert.fail(null, err, 'Should not emit an error');
+                    done();
+                })
+                .on('end', done);
+        });
+
+        it('should not process relative links to php files and change them to html', function (done) {
+            getVinyl('index.php')
+                .pipe(php2html({processLinks: false}))
+                .on('data', function (newFile) {
+                    should.exist(newFile);
+                    should.exist(newFile.path);
+                    should.exist(newFile.relative);
+                    should.exist(newFile.contents);
+                    path.extname(newFile.path).should.equal('.html');
+                    var content = newFile.contents.toString();
+                    [
+                        '<a href="info.php">info.php</a>',
+                        '<a href="http://info.php">http://info.php</a>',
+                        '<a href="info.php?test=1">info.php</a>',
+                        '<img src="getmyimg.php?test=2"/>',
+                        'info.php',
+                        'http://info.php',
+                        'info.php?test=1',
+                        'getmyimg.php?test=2'
+                    ].forEach(function (link) {
+                        content.indexOf(link).should.not.equal(-1);
+                    });
+                })
+                .on('error', function (err) {
+                    assert.fail(null, err, 'Should not emit an error');
+                    done();
+                })
+                .on('end', done);
+        });
+
+        it('should output $_GET data passed to php2html', function (done) {
+            var expected = read('expected/get.html').replace(/[\s\t\r\n]+/gm, '');
+            getVinyl('get.php')
+                .pipe(php2html({ getData: {test: 42, arr: [1, 2, 3, 4], obj: {a: 1, b: 2, c: 3}}}))
+                .on('data', function (newFile) {
+                    should.exist(newFile);
+                    should.exist(newFile.path);
+                    should.exist(newFile.relative);
+                    should.exist(newFile.contents);
+                    path.extname(newFile.path).should.equal('.html');
+                    /<\?php/.test(newFile.contents.toString('utf8')).should.equal(false);
+
+                    newFile.contents.toString('utf8').replace(/[\s\t\r\n]+/gm, '').should.equal(expected);
+                })
+                .on('error', function (err) {
+                    assert.fail(null, err, 'Should not emit an error');
+                    done();
+                })
+                .on('end', done);
+        });
+
+        it('should not throw an error', function (done) {
+            php2html()
+                .on('error', function () {
+                    should.fail('Should not throw an error');
+                })
+                .on('data', function(){})
+                .on('end', done)
+                .end();
+        });
+
+    });
+
+    describe('router', function () {
+        it('should be available', function () {
+            var type = typeof php2html.routes;
+            type.should.equal('function');
+        });
+
+        it('should return readable stream', function () {
+            var routes = php2html.routes(['test']);
+            var isStream = routes instanceof Stream;
+            var isReadable = typeof routes._read === 'function' && typeof routes._readableState === 'object';
+
+            isStream.should.equal(true);
+            isReadable.should.equal(true);
+            routes.readable.should.equal(true);
+        });
+
+        it('should create html from routes', function (done) {
+
+            var routes = php2html.routes(['/myroute', '/another/route', '/route/with/extension.php']);
+            var stream = php2html({
+                router: 'test/fixtures/router.php',
+                processLinks: false
+            });
+            var valid = 0;
+
+            stream.on('error', function (err) {
+                should.not.exist(err);
+            });
+
+            stream.on('data', function (newFile) {
+                should.exist(newFile);
+                should.exist(newFile.route);
+                should.exist(newFile.path);
+                should.exist(newFile.contents);
+                path.extname(newFile.path).should.equal('.html');
+                /<\?php/.test(newFile.contents).should.equal(false);
+                newFile.contents.toString('utf-8').should.equal(newFile.route);
+                ++valid;
+            });
+
+            stream.once('end', function () {
+                valid.should.equal(3);
+                done();
+            });
+
+            routes.pipe(stream);
+        });
+
+        it('should skip empty routes routes', function (done) {
+
+            var routes = php2html.routes(['', '', '/valid']);
+            var stream = php2html({
+                router: 'test/fixtures/router.php',
+                processLinks: false
+            });
+            var valid = 0;
+
+            stream.on('error', function (err) {
+                should.not.exist(err);
+            });
+
+            stream.on('data', function (newFile) {
+                should.exist(newFile);
+                should.exist(newFile.route);
+                should.exist(newFile.path);
+                should.exist(newFile.contents);
+                path.extname(newFile.path).should.equal('.html');
+                /<\?php/.test(newFile.contents).should.equal(false);
+                newFile.contents.toString('utf-8').should.equal(newFile.route);
+                ++valid;
+            });
+
+            stream.once('end', function () {
+                valid.should.equal(1);
+                done();
+            });
+
+            routes.pipe(stream);
+        });
+
+        it('should set filenames to index for routes ending with /', function (done) {
+            var routes = php2html.routes(['/']);
+            var stream = php2html({
+                router: 'test/fixtures/router.php',
+                processLinks: false
+            });
+            var valid = 0;
+
+            stream.on('error', function (err) {
+                should.not.exist(err);
+            });
+
+            stream.on('data', function (newFile) {
+                should.exist(newFile);
+                should.exist(newFile.route);
+                should.exist(newFile.path);
+                should.exist(newFile.contents);
+                path.extname(newFile.path).should.equal('.html');
+
+                /<\?php/.test(newFile.contents).should.equal(false);
+                newFile.contents.toString('utf-8').should.equal(newFile.route);
+
+                /index\.html$/.test(newFile.path).should.equal(true);
+                ++valid;
+            });
+
+            stream.once('end', function () {
+                valid.should.equal(1);
+                done();
+            });
+
+            routes.pipe(stream);
+        });
+    });
 
 });
