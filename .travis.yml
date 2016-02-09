@@ -1,11 +1,17 @@
-sudo: required
-dist: precise
+sudo: false
 language: node_js
 node_js:
   - '0.10'
   - '0.12'
   - 'stable'
+  
+addons:
+  apt:
+    packages:
+      - php5
+      - php5-cgi
+
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install php5-cgi
+  - php --version
+  - php-cgi --version
 
