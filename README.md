@@ -68,6 +68,12 @@ Default value: `false`
 
 Print debug output to the console
 
+#### options.haltOnError
+Type: `Boolean`
+Default value: `true`
+
+Set to `false` to write dest html files on error. Usefull for debugging.
+
 See [php2html](https://github.com/bezoerb/php2html) for a full list of options.
 
 ## License
