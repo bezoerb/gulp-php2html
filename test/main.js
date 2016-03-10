@@ -1,4 +1,4 @@
-/*global describe, it*/
+/* global describe, it*/
 'use strict';
 
 var fs = require('fs');
@@ -34,12 +34,12 @@ function getVinyl() {
 }
 
 function read(file) {
-    return fs.readFileSync(path.join(__dirname,file), 'utf8');
+    return fs.readFileSync(path.join(__dirname, file), 'utf8');
 }
 
 describe('gulp-php2html', function () {
     describe('plugin', function () {
-       // this.timeout(20000);
+        // this.timeout(20000);
 
         it('should emit error on streamed file', function (done) {
             var fakeFilePath = path.join(__dirname, 'fixtures', 'index.php');
@@ -75,19 +75,17 @@ describe('gulp-php2html', function () {
                 .on('end', done);
         });
 
-
-
         it('should use correct PHP environment variables', function (done) {
             var results = {
-                'DOCUMENT_ROOT': path.resolve('test'),
-                'PHP_SELF': '/fixtures/env/PHP_SELF.php',
-                'REQUEST_URI': '/fixtures/env/REQUEST_URI.php',
-                'SCRIPT_NAME': '/fixtures/env/SCRIPT_NAME.php',
-                'SCRIPT_FILENAME': path.resolve('test/fixtures/env/SCRIPT_FILENAME.php')
+                DOCUMENT_ROOT: path.resolve('test'),
+                PHP_SELF: '/fixtures/env/PHP_SELF.php',
+                REQUEST_URI: '/fixtures/env/REQUEST_URI.php',
+                SCRIPT_NAME: '/fixtures/env/SCRIPT_NAME.php',
+                SCRIPT_FILENAME: path.resolve('test/fixtures/env/SCRIPT_FILENAME.php')
             };
 
             function assertResult(file) {
-                var index = path.basename(file.path,'.html');
+                var index = path.basename(file.path, '.html');
                 should.exist(file);
                 should.exist(file.path);
                 should.exist(file.relative);
@@ -96,8 +94,7 @@ describe('gulp-php2html', function () {
                 file.contents.toString('utf8').should.equal(results[index]);
             }
 
-
-            getVinyl('env/DOCUMENT_ROOT.php','env/PHP_SELF.php','env/REQUEST_URI.php','env/SCRIPT_NAME.php','env/SCRIPT_FILENAME.php')
+            getVinyl('env/DOCUMENT_ROOT.php', 'env/PHP_SELF.php', 'env/REQUEST_URI.php', 'env/SCRIPT_NAME.php', 'env/SCRIPT_FILENAME.php')
                 .pipe(php2html())
                 .pipe(streamAssert.length(5))
                 .pipe(streamAssert.nth(0, assertResult))
@@ -109,7 +106,7 @@ describe('gulp-php2html', function () {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
-                .on('data', function(file){
+                .on('data', function (file) {
                     path.extname(file.path).should.equal('.html');
                 })
                 .on('end', done);
@@ -129,7 +126,7 @@ describe('gulp-php2html', function () {
         });
 
         it('should respect haltOnError option', function (done) {
-            getVinyl('test.txt','index.php')
+            getVinyl('test.txt', 'index.php')
                 .pipe(php2html({haltOnError: false}))
                 .on('data', function (newFile) {
                     should.exist(newFile);
@@ -141,6 +138,7 @@ describe('gulp-php2html', function () {
         });
 
         it('should process relative links to php files and change them to html', function (done) {
+            /* eslint-disable max-nested-callbacks */
             getVinyl('index.php')
                 .pipe(php2html())
                 .on('data', function (newFile) {
@@ -168,9 +166,11 @@ describe('gulp-php2html', function () {
                     done();
                 })
                 .on('end', done);
+            /* eslint-enable max-nested-callbacks */
         });
 
         it('should not process relative links to php files and change them to html', function (done) {
+            /* eslint-disable max-nested-callbacks */
             getVinyl('index.php')
                 .pipe(php2html({processLinks: false}))
                 .on('data', function (newFile) {
@@ -198,12 +198,13 @@ describe('gulp-php2html', function () {
                     done();
                 })
                 .on('end', done);
+            /* eslint-enable max-nested-callbacks */
         });
 
         it('should output $_GET data passed to php2html', function (done) {
             var expected = read('expected/get.html').replace(/[\s\t\r\n]+/gm, '');
             getVinyl('get.php')
-                .pipe(php2html({ getData: {test: 42, arr: [1, 2, 3, 4], obj: {a: 1, b: 2, c: 3}}}))
+                .pipe(php2html({getData: {test: 42, arr: [1, 2, 3, 4], obj: {a: 1, b: 2, c: 3}}}))
                 .on('data', function (newFile) {
                     should.exist(newFile);
                     should.exist(newFile.path);
@@ -226,11 +227,11 @@ describe('gulp-php2html', function () {
                 .on('error', function () {
                     should.fail('Should not throw an error');
                 })
-                .on('data', function(){})
+                .on('data', function () {
+                })
                 .on('end', done)
                 .end();
         });
-
     });
 
     describe('router', function () {
@@ -250,7 +251,6 @@ describe('gulp-php2html', function () {
         });
 
         it('should create html from routes', function (done) {
-
             var routes = php2html.routes(['/myroute', '/another/route', '/route/with/extension.php']);
             var stream = php2html({
                 router: 'test/fixtures/router.php',
@@ -282,7 +282,6 @@ describe('gulp-php2html', function () {
         });
 
         it('should skip empty routes routes', function (done) {
-
             var routes = php2html.routes(['', '', '/valid']);
             var stream = php2html({
                 router: 'test/fixtures/router.php',
@@ -347,5 +346,4 @@ describe('gulp-php2html', function () {
             routes.pipe(stream);
         });
     });
-
 });
