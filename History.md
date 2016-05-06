@@ -1,4 +1,11 @@
 
+v0.3.2 / 2016-05-07
+===================
+
+  * travis tweaks
+  * added test for requestHost
+  * bump deps
+
 v0.3.1 / 2016-03-10
 ==================
 
