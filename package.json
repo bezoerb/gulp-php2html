@@ -24,7 +24,7 @@
     "debug": "^2.2.0",
     "gulp-util": "^3.0.4",
     "lodash": "^4.3.0",
-    "php2html": "^0.1.1",
+    "php2html": "^0.2.4",
     "stream-array": "^1.1.1",
     "through2": "^2.0.1",
     "vinyl": "^1.1.1"
@@ -35,7 +35,7 @@
     "should": "^8.2.2",
     "stream-assert": "^2.0.3",
     "vinyl-source-stream": "^1.1.0",
-    "xo": "^0.13.0"
+    "xo": "^0.15.0"
   },
   "engines": {
     "node": ">=0.12.0",

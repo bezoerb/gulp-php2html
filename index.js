@@ -1,7 +1,7 @@
 'use strict';
+var path = require('path');
 var _ = require('lodash');
 var php2html = require('php2html').default;
-var path = require('path');
 var File = require('vinyl');
 var streamify = require('stream-array');
 var through2 = require('through2');

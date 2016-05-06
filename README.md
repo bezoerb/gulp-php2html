@@ -74,7 +74,7 @@ Default value: `true`
 
 Set to `false` to write dest html files on error. Usefull for debugging.
 
-See [php2html](https://github.com/bezoerb/php2html) for a full list of options.
+See [php2html](https://github.com/bezoerb/php2html#options) for a full list of options.
 
 ## License
 

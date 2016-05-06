@@ -2,15 +2,15 @@
 'use strict';
 
 var fs = require('fs');
+var path = require('path');
+var Stream = require('stream').Stream;
 var vinylStream = require('vinyl-source-stream');
 var assert = require('chai').assert;
 var streamAssert = require('stream-assert');
 var should = require('should');
-var path = require('path');
 var gutil = require('gulp-util');
-var Stream = require('stream').Stream;
-var php2html = require('../');
 var array = require('stream-array');
+var php2html = require('../');
 
 /**
  * Get vinyl file object
