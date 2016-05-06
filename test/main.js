@@ -81,7 +81,8 @@ describe('gulp-php2html', function () {
                 PHP_SELF: '/fixtures/env/PHP_SELF.php',
                 REQUEST_URI: '/fixtures/env/REQUEST_URI.php',
                 SCRIPT_NAME: '/fixtures/env/SCRIPT_NAME.php',
-                SCRIPT_FILENAME: path.resolve('test/fixtures/env/SCRIPT_FILENAME.php')
+                SCRIPT_FILENAME: path.resolve('test/fixtures/env/SCRIPT_FILENAME.php'),
+                SERVER_NAME: 'mydomain.com'
             };
 
             function assertResult(file) {
@@ -94,14 +95,15 @@ describe('gulp-php2html', function () {
                 file.contents.toString('utf8').should.equal(results[index]);
             }
 
-            getVinyl('env/DOCUMENT_ROOT.php', 'env/PHP_SELF.php', 'env/REQUEST_URI.php', 'env/SCRIPT_NAME.php', 'env/SCRIPT_FILENAME.php')
-                .pipe(php2html())
-                .pipe(streamAssert.length(5))
+            getVinyl('env/DOCUMENT_ROOT.php', 'env/PHP_SELF.php', 'env/REQUEST_URI.php', 'env/SCRIPT_NAME.php', 'env/SCRIPT_FILENAME.php', 'env/SERVER_NAME.php')
+                .pipe(php2html({requestHost: 'mydomain.com'}))
+                .pipe(streamAssert.length(6))
                 .pipe(streamAssert.nth(0, assertResult))
                 .pipe(streamAssert.nth(1, assertResult))
                 .pipe(streamAssert.nth(2, assertResult))
                 .pipe(streamAssert.nth(3, assertResult))
                 .pipe(streamAssert.nth(4, assertResult))
+                .pipe(streamAssert.nth(6, assertResult))
                 .on('error', function (err) {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
