@@ -8,7 +8,7 @@ var vinylStream = require('vinyl-source-stream');
 var assert = require('chai').assert;
 var streamAssert = require('stream-assert');
 var should = require('should');
-var gutil = require('gulp-util');
+var File = require('vinyl');
 var array = require('stream-array');
 var php2html = require('../');
 
@@ -22,7 +22,7 @@ function getVinyl() {
 
     function create(filepath) {
         var file = path.join(__dirname, 'fixtures', filepath);
-        return new gutil.File({
+        return new File({
             cwd: __dirname,
             base: path.dirname(file),
             path: file,
