@@ -1,13 +1,13 @@
 'use strict';
 var path = require('path');
 var _ = require('lodash');
-var php2html = require('php2html').default;
+var php2html = require('php2html');
 var File = require('vinyl');
 var streamify = require('stream-array');
 var through2 = require('through2');
 var debug = require('debug')('php2html:gulp');
-var PluginError = require('gulp-util').PluginError;
-var replaceExtension = require('gulp-util').replaceExtension;
+var PluginError = require('plugin-error');
+var replaceExtension = require('replace-ext');
 
 var php2htmlPlugin = function (options) {
     options = _.assign({
@@ -42,7 +42,7 @@ var php2htmlPlugin = function (options) {
 
             // everything went right
             file.path = replaceExtension(file.path, '.html');
-            file.contents = new Buffer(data || '');
+            file.contents = Buffer.from(data || '');
 
             debug(path.basename(file.path), file.contents.toString('utf8').length, 'bytes');
             return cb(null, file);
