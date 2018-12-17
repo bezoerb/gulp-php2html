@@ -26,7 +26,7 @@ function getVinyl() {
             cwd: __dirname,
             base: path.dirname(file),
             path: file,
-            contents: new Buffer(fs.readFileSync(file))
+            contents: Buffer.from(fs.readFileSync(file))
         });
     }
 

@@ -26,7 +26,7 @@ gulp.src("./src/*.php")
 var php2html = require("gulp-php2html");
 
 php2html.routes(['/my/route','/will/be/processed','/by/router.php'])
-	.pipe(php2html({router: 'router.php'))
+	.pipe(php2html({router: 'router.php'}))
 	.pipe(gulp.dest("./dist"));
 ```
 

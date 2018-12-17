@@ -42,7 +42,7 @@ var php2htmlPlugin = function (options) {
 
             // everything went right
             file.path = replaceExtension(file.path, '.html');
-            file.contents = new Buffer(data || '');
+            file.contents = Buffer.from(data || '');
 
             debug(path.basename(file.path), file.contents.toString('utf8').length, 'bytes');
             return cb(null, file);
