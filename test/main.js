@@ -1,27 +1,25 @@
-/* global describe, it*/
+/* global describe, it */
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var Stream = require('stream').Stream;
-var vinylStream = require('vinyl-source-stream');
-var assert = require('chai').assert;
-var streamAssert = require('stream-assert');
-var should = require('should');
-var File = require('vinyl');
-var array = require('stream-array');
-var php2html = require('../');
+const fs = require('fs');
+const path = require('path');
+const {Stream} = require('stream');
+const vinylStream = require('vinyl-source-stream');
+const {assert} = require('chai');
+const streamAssert = require('stream-assert');
+const should = require('should');
+const File = require('vinyl');
+const array = require('stream-array');
+const php2html = require('..');
 
 /**
  * Get vinyl file object
  *
  * @returns {*|StreamArray|exports}
  */
-function getVinyl() {
-    var args = Array.prototype.slice.call(arguments);
-
+function getVinyl(...args) {
     function create(filepath) {
-        var file = path.join(__dirname, 'fixtures', filepath);
+        const file = path.join(__dirname, 'fixtures', filepath);
         return new File({
             cwd: __dirname,
             base: path.dirname(file),
@@ -37,30 +35,30 @@ function read(file) {
     return fs.readFileSync(path.join(__dirname, file), 'utf8');
 }
 
-describe('gulp-php2html', function () {
-    describe('plugin', function () {
-        // this.timeout(20000);
+describe('gulp-php2html', () => {
+    describe('plugin', () => {
+        // This.timeout(20000);
 
-        it('should emit error on streamed file', function (done) {
-            var fakeFilePath = path.join(__dirname, 'fixtures', 'index.php');
+        it('should emit error on streamed file', done => {
+            const fakeFilePath = path.join(__dirname, 'fixtures', 'index.php');
 
             fs.createReadStream(fakeFilePath)
                 .pipe(vinylStream())
                 .pipe(php2html())
-                .on('data', function (data) {
+                .on('data', data => {
                     assert.fail(null, data, 'Should not emit data');
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.strictEqual(err.message, 'Streaming not supported');
                     done();
                 });
         });
 
-        it('should create html', function (done) {
+        it('should create html', done => {
             getVinyl('index.php')
                 .pipe(php2html())
                 .pipe(streamAssert.length(1))
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.exist(newFile);
                     should.exist(newFile.path);
                     should.exist(newFile.relative);
@@ -68,15 +66,15 @@ describe('gulp-php2html', function () {
                     path.extname(newFile.path).should.equal('.html');
                     /<\?php/.test(newFile.contents).should.equal(false);
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
                 .on('end', done);
         });
 
-        it('should use correct PHP environment variables', function (done) {
-            var results = {
+        it('should use correct PHP environment variables', done => {
+            const results = {
                 DOCUMENT_ROOT: path.resolve('test'),
                 PHP_SELF: '/fixtures/env/PHP_SELF.php',
                 REQUEST_URI: '/fixtures/env/REQUEST_URI.php',
@@ -86,7 +84,7 @@ describe('gulp-php2html', function () {
             };
 
             function assertResult(file) {
-                var index = path.basename(file.path, '.html');
+                const index = path.basename(file.path, '.html');
                 should.exist(file);
                 should.exist(file.path);
                 should.exist(file.relative);
@@ -104,52 +102,52 @@ describe('gulp-php2html', function () {
                 .pipe(streamAssert.nth(3, assertResult))
                 .pipe(streamAssert.nth(4, assertResult))
                 .pipe(streamAssert.nth(6, assertResult))
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
-                .on('data', function (file) {
+                .on('data', file => {
                     path.extname(file.path).should.equal('.html');
                 })
                 .on('end', done);
         });
 
-        it('should throw an error', function (done) {
+        it('should throw an error', done => {
             getVinyl('test.txt')
                 .pipe(php2html())
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.not.exist(newFile);
                     done();
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     should.exist(err);
                     done();
                 });
         });
 
-        it('should respect haltOnError option', function (done) {
+        it('should respect haltOnError option', done => {
             getVinyl('test.txt', 'index.php')
                 .pipe(php2html({haltOnError: false}))
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.exist(newFile);
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     should.not.exist(err);
                 })
                 .on('end', done);
         });
 
-        it('should process relative links to php files and change them to html', function (done) {
+        it('should process relative links to php files and change them to html', done => {
             /* eslint-disable max-nested-callbacks */
             getVinyl('index.php')
                 .pipe(php2html())
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.exist(newFile);
                     should.exist(newFile.path);
                     should.exist(newFile.relative);
                     should.exist(newFile.contents);
                     path.extname(newFile.path).should.equal('.html');
-                    var content = newFile.contents.toString();
+                    const content = newFile.contents.toString();
                     [
                         '<a href="info.html">info.php</a>',
                         '<a href="http://info.php">http://info.php</a>',
@@ -159,11 +157,11 @@ describe('gulp-php2html', function () {
                         'http://info.php',
                         'info.html?test=1',
                         'getmyimg.php?test=2'
-                    ].forEach(function (link) {
+                    ].forEach(link => {
                         content.indexOf(link).should.not.equal(-1);
                     });
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
@@ -171,17 +169,17 @@ describe('gulp-php2html', function () {
             /* eslint-enable max-nested-callbacks */
         });
 
-        it('should not process relative links to php files and change them to html', function (done) {
+        it('should not process relative links to php files and change them to html', done => {
             /* eslint-disable max-nested-callbacks */
             getVinyl('index.php')
                 .pipe(php2html({processLinks: false}))
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.exist(newFile);
                     should.exist(newFile.path);
                     should.exist(newFile.relative);
                     should.exist(newFile.contents);
                     path.extname(newFile.path).should.equal('.html');
-                    var content = newFile.contents.toString();
+                    const content = newFile.contents.toString();
                     [
                         '<a href="info.php">info.php</a>',
                         '<a href="http://info.php">http://info.php</a>',
@@ -191,11 +189,11 @@ describe('gulp-php2html', function () {
                         'http://info.php',
                         'info.php?test=1',
                         'getmyimg.php?test=2'
-                    ].forEach(function (link) {
+                    ].forEach(link => {
                         content.indexOf(link).should.not.equal(-1);
                     });
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
@@ -203,11 +201,11 @@ describe('gulp-php2html', function () {
             /* eslint-enable max-nested-callbacks */
         });
 
-        it('should output $_GET data passed to php2html', function (done) {
-            var expected = read('expected/get.html').replace(/[\s\t\r\n]+/gm, '');
+        it('should output $_GET data passed to php2html', done => {
+            const expected = read('expected/get.html').replace(/[\s\t\r\n]+/gm, '');
             getVinyl('get.php')
                 .pipe(php2html({getData: {test: 42, arr: [1, 2, 3, 4], obj: {a: 1, b: 2, c: 3}}}))
-                .on('data', function (newFile) {
+                .on('data', newFile => {
                     should.exist(newFile);
                     should.exist(newFile.path);
                     should.exist(newFile.relative);
@@ -217,54 +215,54 @@ describe('gulp-php2html', function () {
 
                     newFile.contents.toString('utf8').replace(/[\s\t\r\n]+/gm, '').should.equal(expected);
                 })
-                .on('error', function (err) {
+                .on('error', err => {
                     assert.fail(null, err, 'Should not emit an error');
                     done();
                 })
                 .on('end', done);
         });
 
-        it('should not throw an error', function (done) {
+        it('should not throw an error', done => {
             php2html()
-                .on('error', function () {
+                .on('error', () => {
                     should.fail('Should not throw an error');
                 })
-                .on('data', function () {
+                .on('data', () => {
                 })
                 .on('end', done)
                 .end();
         });
     });
 
-    describe('router', function () {
-        it('should be available', function () {
-            var type = typeof php2html.routes;
+    describe('router', () => {
+        it('should be available', () => {
+            const type = typeof php2html.routes;
             type.should.equal('function');
         });
 
-        it('should return readable stream', function () {
-            var routes = php2html.routes(['test']);
-            var isStream = routes instanceof Stream;
-            var isReadable = typeof routes._read === 'function' && typeof routes._readableState === 'object';
+        it('should return readable stream', () => {
+            const routes = php2html.routes(['test']);
+            const isStream = routes instanceof Stream;
+            const isReadable = typeof routes._read === 'function' && typeof routes._readableState === 'object';
 
             isStream.should.equal(true);
             isReadable.should.equal(true);
             routes.readable.should.equal(true);
         });
 
-        it('should create html from routes', function (done) {
-            var routes = php2html.routes(['/myroute', '/another/route', '/route/with/extension.php']);
-            var stream = php2html({
+        it('should create html from routes', done => {
+            const routes = php2html.routes(['/myroute', '/another/route', '/route/with/extension.php']);
+            const stream = php2html({
                 router: 'test/fixtures/router.php',
                 processLinks: false
             });
-            var valid = 0;
+            let valid = 0;
 
-            stream.on('error', function (err) {
+            stream.on('error', err => {
                 should.not.exist(err);
             });
 
-            stream.on('data', function (newFile) {
+            stream.on('data', newFile => {
                 should.exist(newFile);
                 should.exist(newFile.route);
                 should.exist(newFile.path);
@@ -275,7 +273,7 @@ describe('gulp-php2html', function () {
                 ++valid;
             });
 
-            stream.once('end', function () {
+            stream.once('end', () => {
                 valid.should.equal(3);
                 done();
             });
@@ -283,19 +281,19 @@ describe('gulp-php2html', function () {
             routes.pipe(stream);
         });
 
-        it('should skip empty routes routes', function (done) {
-            var routes = php2html.routes(['', '', '/valid']);
-            var stream = php2html({
+        it('should skip empty routes routes', done => {
+            const routes = php2html.routes(['', '', '/valid']);
+            const stream = php2html({
                 router: 'test/fixtures/router.php',
                 processLinks: false
             });
-            var valid = 0;
+            let valid = 0;
 
-            stream.on('error', function (err) {
+            stream.on('error', err => {
                 should.not.exist(err);
             });
 
-            stream.on('data', function (newFile) {
+            stream.on('data', newFile => {
                 should.exist(newFile);
                 should.exist(newFile.route);
                 should.exist(newFile.path);
@@ -306,7 +304,7 @@ describe('gulp-php2html', function () {
                 ++valid;
             });
 
-            stream.once('end', function () {
+            stream.once('end', () => {
                 valid.should.equal(1);
                 done();
             });
@@ -314,19 +312,19 @@ describe('gulp-php2html', function () {
             routes.pipe(stream);
         });
 
-        it('should set filenames to index for routes ending with /', function (done) {
-            var routes = php2html.routes(['/']);
-            var stream = php2html({
+        it('should set filenames to index for routes ending with /', done => {
+            const routes = php2html.routes(['/']);
+            const stream = php2html({
                 router: 'test/fixtures/router.php',
                 processLinks: false
             });
-            var valid = 0;
+            let valid = 0;
 
-            stream.on('error', function (err) {
+            stream.on('error', err => {
                 should.not.exist(err);
             });
 
-            stream.on('data', function (newFile) {
+            stream.on('data', newFile => {
                 should.exist(newFile);
                 should.exist(newFile.route);
                 should.exist(newFile.path);
@@ -340,7 +338,7 @@ describe('gulp-php2html', function () {
                 ++valid;
             });
 
-            stream.once('end', function () {
+            stream.once('end', () => {
                 valid.should.equal(1);
                 done();
             });

@@ -1,15 +1,15 @@
 'use strict';
-var path = require('path');
-var _ = require('lodash');
-var php2html = require('php2html');
-var File = require('vinyl');
-var streamify = require('stream-array');
-var through2 = require('through2');
-var debug = require('debug')('php2html:gulp');
-var PluginError = require('plugin-error');
-var replaceExtension = require('replace-ext');
+const path = require('path');
+const _ = require('lodash');
+const php2html = require('php2html');
+const File = require('vinyl');
+const streamify = require('stream-array');
+const through2 = require('through2');
+const debug = require('debug')('php2html:gulp');
+const PluginError = require('plugin-error');
+const replaceExtension = require('replace-ext');
 
-var php2htmlPlugin = function (options) {
+const php2htmlPlugin = function (options) {
     options = _.assign({
         processLinks: true,
         getData: {},
@@ -26,11 +26,11 @@ var php2htmlPlugin = function (options) {
             return this.emit('error', new PluginError('critical', 'Streaming not supported'));
         }
 
-        var base = options.baseDir || options.docroot || file.cwd || process.cwd();
-        var opts = _.assign(options, {baseDir: path.resolve(base)});
+        const base = options.baseDir || options.docroot || file.cwd || process.cwd();
+        const opts = _.assign(options, {baseDir: path.resolve(base)});
 
-        php2html(file.route || file.path, opts, function (err, data) {
-            // request failed
+        php2html(file.route || file.path, opts, (err, data) => {
+            // Request failed
             if (err && options.haltOnError) {
                 return cb(new PluginError('gulp-php2html', '(' + (file.route || path.basename(file.path)) + ') ' + (err.message || err)));
             }
@@ -40,7 +40,7 @@ var php2htmlPlugin = function (options) {
                 return cb(new PluginError('gulp-php2html', '(' + (file.route || path.basename(file.path)) + ') 204 - No Content'));
             }
 
-            // everything went right
+            // Everything went right
             file.path = replaceExtension(file.path, '.html');
             file.contents = Buffer.from(data || '');
 
@@ -51,13 +51,13 @@ var php2htmlPlugin = function (options) {
 };
 
 php2htmlPlugin.routes = function (routes) {
-    var vinyls = _.chain(routes)
-        .reject(function (route) {
+    const vinyls = _.chain(routes)
+        .reject(route => {
             return !_.isString(route) || !route;
-        }).map(function (route) {
-            var isDir = /\/$/.test(route);
-            var uri = isDir ? route + 'index.php' : route;
-            var file = new File({
+        }).map(route => {
+            const isDir = /\/$/.test(route);
+            const uri = isDir ? route + 'index.php' : route;
+            const file = new File({
                 cwd: process.cwd(),
                 path: path.join(process.cwd(), uri)
             });
