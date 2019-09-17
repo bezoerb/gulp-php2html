@@ -9,8 +9,8 @@ node_js:
 addons:
   apt:
     packages:
-      - php5
-      - php5-cgi
+      - php
+      - php-cgi
 
 before_install:
   - php-cgi --version
