@@ -23,27 +23,26 @@
   "dependencies": {
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
-    "php2html": "^1.0.1",
+    "php2html": "^3.0.0",
     "plugin-error": "^1.0.1",
-    "replace-ext": "^1.0.0",
+    "replace-ext": "^2.0.0",
     "stream-array": "^1.1.1",
-    "through2": "^3.0.0",
+    "through2": "^3.0.1",
     "vinyl": "^2.2.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^5.2.0",
+    "mocha": "^7.1.2",
     "should": "^13.2.3",
     "stream-assert": "^2.0.3",
     "vinyl-source-stream": "^2.0.0",
-    "xo": "^0.23.0"
+    "xo": "^0.30.0"
   },
   "engines": {
-    "node": ">=4",
-    "npm": ">=1.2.10"
+    "node": ">=10"
   },
   "license": "MIT",
   "xo": {
-    "space": 4
+    "space": 2
   }
 }
